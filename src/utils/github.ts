@@ -60,6 +60,14 @@ export const createRepository = async (
   return response.json();
 };
 
+const toBase64 = (content: string): string => {
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(content, 'utf-8').toString('base64');
+  }
+  // Browser fallback
+  return btoa(unescape(encodeURIComponent(content)));
+};
+
 export const createCommit = async (
   account: GithubAccount,
   repoName: string,
@@ -96,13 +104,14 @@ export const createCommit = async (
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            content: typeof file.content === 'string' ? file.content : '',
-            encoding: 'utf-8',
+            content: toBase64(typeof file.content === 'string' ? file.content : ''),
+            encoding: 'base64',
           }),
         });
 
         if (!blobResponse.ok) {
-          throw new Error(`Failed to create blob for ${file.path}`);
+          const errorText = await blobResponse.text();
+          throw new Error(`Failed to create blob for ${file.path}: ${errorText}`);
         }
 
         const blobData = await blobResponse.json();
