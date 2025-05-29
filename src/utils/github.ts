@@ -249,3 +249,67 @@ export const createCommit = async (
 
   return updateRefResponse.json();
 };
+
+export const fetchUserOrganizations = async (token: string) => {
+  const response = await fetch('https://api.github.com/user/orgs', {
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitHub API error: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
+export const deleteRepository = async (
+  account: GithubAccount,
+  repoName: string
+) => {
+  const response = await fetch(
+    `https://api.github.com/repos/${account.username}/${repoName}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `token ${account.token}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || `GitHub API error: ${response.statusText}`);
+  }
+
+  return true;
+};
+
+export const transferRepository = async (
+  account: GithubAccount,
+  repoName: string,
+  newOwner: string
+) => {
+  const response = await fetch(
+    `https://api.github.com/repos/${account.username}/${repoName}/transfer`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `token ${account.token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ new_owner: newOwner }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || `GitHub API error: ${response.statusText}`);
+  }
+
+  return response.json();
+};

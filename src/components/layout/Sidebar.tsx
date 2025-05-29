@@ -15,6 +15,7 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { to: '/', icon: <LayoutDashboard className="h-5 w-5" />, label: 'Dashboard' },
     { to: '/accounts', icon: <Users className="h-5 w-5" />, label: 'Accounts' },
+    { to: '/repositories', icon: <Github className="h-5 w-5" />, label: 'Repositories' },
     { to: '/new-repository', icon: <GitBranch className="h-5 w-5" />, label: 'New Repository' },
     { to: '/settings', icon: <Settings className="h-5 w-5" />, label: 'Settings' },
   ];
