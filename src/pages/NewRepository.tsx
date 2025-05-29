@@ -1,11 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { getFilesFromDataTransfer } from '../utils/dropHelpers';
 import { GitBranch, Upload, Eye, FolderOpen, FileText, Lock, Unlock, Check } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAppContext } from '../context/AppContext';
 import { useToast } from '../components/ui/Toaster';
 import { FileEntry, Repository } from '../types';
-import { processUploadedFiles } from '../utils/fileProcessor';
+import { processUploadedFiles, getFilesForCommit } from '../utils/fileProcessor';
+import FileTree from '../components/FileTree';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
 import { useLocation } from 'react-router-dom';
@@ -60,30 +62,27 @@ const NewRepository: React.FC = () => {
   };
 
   const toggleAllFiles = () => {
-    const fileEntries = files.filter(file => file.type === 'file');
-    if (selectedFiles.length === fileEntries.length) {
-      // If all files are selected, deselect all
+    const allPaths = getFilesForCommit(files);
+    if (selectedFiles.length === allPaths.length) {
       setSelectedFiles([]);
     } else {
-      // Otherwise, select all files
-      setSelectedFiles(fileEntries.map(file => file.path));
+      setSelectedFiles(allPaths);
     }
   };
   
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
-    
+    const filesToProcess = acceptedFiles;
+
     setIsProcessing(true);
-    
+
     try {
-      const processedFiles = await processUploadedFiles(acceptedFiles);
+      const processedFiles = await processUploadedFiles(filesToProcess);
       setFiles(processedFiles);
       setStep('configure');
-      
+
       // Set all files as selected by default
-      const allFilePaths = processedFiles
-        .filter(file => file.type === 'file')
-        .map(file => file.path);
+      const allFilePaths = getFilesForCommit(processedFiles);
       setSelectedFiles(allFilePaths);
       
       addToast({
@@ -103,9 +102,16 @@ const NewRepository: React.FC = () => {
     }
   }, [addToast]);
   
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    noClick: isProcessing
+    noClick: isProcessing,
+    getFilesFromEvent: (event) => {
+      const items = (event as any).dataTransfer?.items;
+      if (items && Array.from(items).some((i: any) => i.webkitGetAsEntry?.())) {
+        return getFilesFromDataTransfer(items);
+      }
+      return (event as any).target?.files ? Promise.resolve(Array.from((event as any).target.files)) : Promise.resolve([]);
+    }
   });
   
   const handleConfigureNext = () => {
@@ -276,7 +282,7 @@ const NewRepository: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         {/* Progress Steps */}
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <div className={`px-6 py-4 ${creationMode === 'empty' ? 'justify-center' : 'justify-between'}`}>
+          <div className={`px-6 py-4 flex items-center space-x-4 ${creationMode === 'empty' ? 'justify-center' : 'justify-between'}`}>
             {creationMode === 'fromFiles' && (
               <>
                 <div className="flex items-center">
@@ -374,7 +380,7 @@ const NewRepository: React.FC = () => {
                   'border-gray-300 dark:border-gray-700'
                 } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
-                <input {...getInputProps()} />
+                <input {...getInputProps({ webkitdirectory: 'true', directory: '', multiple: true })} />
                 <div className="text-center">
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <p className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -686,32 +692,22 @@ const NewRepository: React.FC = () => {
                       onClick={toggleAllFiles}
                       className="text-xs"
                     >
-                      {selectedFiles.length === files.filter(f => f.type === 'file').length ? 'Deselect All' : 'Select All'}
+                      {selectedFiles.length === getFilesForCommit(files).length ? 'Deselect All' : 'Select All'}
                     </Button>
                   </div>
-                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md">
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {files.map((file, index) => (
-                        <li key={index} className="p-2 flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`file-${index}`}
-                            checked={selectedFiles.includes(file.path)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedFiles([...selectedFiles, file.path]);
-                              } else {
-                                setSelectedFiles(selectedFiles.filter(f => f !== file.path));
-                              }
-                            }}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor={`file-${index}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                            {file.path}
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
+                    <FileTree
+                      entries={files}
+                      showCheckboxes
+                      selectedFiles={selectedFiles}
+                      onToggleFile={(path, checked) => {
+                        if (checked) {
+                          setSelectedFiles([...selectedFiles, path]);
+                        } else {
+                          setSelectedFiles(selectedFiles.filter(f => f !== path));
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -805,14 +801,11 @@ const NewRepository: React.FC = () => {
                         Files ({selectedFiles.length})
                       </p>
                       <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2">
-                        <ul className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
-                          {selectedFiles.map((file, index) => (
-                            <li key={index} className="flex items-center">
-                              <Check className="h-3 w-3 text-green-500 mr-2" />
-                              {file}
-                            </li>
-                          ))}
-                        </ul>
+                        <FileTree
+                          entries={files}
+                          selectedFiles={selectedFiles}
+                          highlightSelected
+                        />
                       </div>
                     </div>
                   </div>

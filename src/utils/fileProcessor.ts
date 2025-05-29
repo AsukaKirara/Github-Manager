@@ -39,7 +39,7 @@ const processZipFile = async (zipFile: File): Promise<FileEntry[]> => {
   
   try {
     const zip = new JSZip();
-    const contents = await zip.loadAsync(zipFile);
+    const contents = await zip.loadAsync(await zipFile.arrayBuffer());
     
     // Process each file in the zip
     for (const [path, file] of Object.entries(contents.files)) {
