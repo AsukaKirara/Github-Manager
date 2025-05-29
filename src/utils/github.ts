@@ -169,11 +169,11 @@ export const createCommit = async (
     );
     
     if (!defaultBranchResponse2.ok) {
-      throw new Error(`Failed to get default branch information`);
+      baseSha = undefined;
+    } else {
+      const defaultBranchData = await defaultBranchResponse2.json();
+      baseSha = defaultBranchData.object.sha;
     }
-    
-    const defaultBranchData = await defaultBranchResponse2.json();
-    baseSha = defaultBranchData.object.sha;
   } else {
     const refData = await refResponse.json();
     baseSha = refData.object.sha;
@@ -189,10 +189,16 @@ export const createCommit = async (
         Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        base_tree: baseSha,
-        tree: treeItems,
-      }),
+      body: JSON.stringify(
+        baseSha
+          ? {
+              base_tree: baseSha,
+              tree: treeItems,
+            }
+          : {
+              tree: treeItems,
+            }
+      ),
     }
   );
 
@@ -215,7 +221,7 @@ export const createCommit = async (
       body: JSON.stringify({
         message,
         tree: treeData.sha,
-        parents: [baseSha],
+        parents: baseSha ? [baseSha] : [],
       }),
     }
   );

@@ -4,6 +4,7 @@ import { getFilesFromDataTransfer } from '../utils/dropHelpers';
 import { GitBranch, Upload, Eye, FolderOpen, FileText, Lock, Unlock, Check } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAppContext } from '../context/AppContext';
+import FileTree from '../components/FileTree';
 import { useToast } from '../components/ui/Toaster';
 import { FileEntry, Repository } from '../types';
 import { processUploadedFiles } from '../utils/fileProcessor';
@@ -12,7 +13,7 @@ import { createRepository, createCommit } from '../utils/github';
 import { useLocation } from 'react-router-dom';
 
 const NewRepository: React.FC = () => {
-  const { accounts, activeAccountId } = useAppContext();
+  const { accounts, activeAccountId, setActiveAccountId } = useAppContext();
   const { addToast } = useToast();
   const location = useLocation();
   const activeAccount = accounts.find(account => account.id === activeAccountId);
@@ -30,6 +31,7 @@ const NewRepository: React.FC = () => {
   );
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [previewFile, setPreviewFile] = useState<FileEntry | null>(null);
   
   // Repository configuration
   const [repoName, setRepoName] = useState('');
@@ -44,6 +46,27 @@ const NewRepository: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [ignorePatterns, setIgnorePatterns] = useState<string[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+
+  const selectedTree = React.useMemo(() => {
+    const filterEntries = (entries: FileEntry[], base = ''): FileEntry[] => {
+      const result: FileEntry[] = [];
+      for (const entry of entries) {
+        const fullPath = base ? `${base}/${entry.path}` : entry.path;
+        if (entry.type === 'file') {
+          if (selectedFiles.includes(fullPath)) {
+            result.push(entry);
+          }
+        } else if (entry.children) {
+          const children = filterEntries(entry.children, fullPath);
+          if (children.length > 0) {
+            result.push({ ...entry, children });
+          }
+        }
+      }
+      return result;
+    };
+    return filterEntries(files);
+  }, [files, selectedFiles]);
 
   const resetForm = () => {
     setCreationMode(null);
@@ -76,7 +99,7 @@ const NewRepository: React.FC = () => {
     const filesToProcess = acceptedFiles;
 
     setIsProcessing(true);
-
+    setPreviewFile(null);
     try {
       const processedFiles = await processUploadedFiles(filesToProcess);
       setFiles(processedFiles);
@@ -414,8 +437,24 @@ const NewRepository: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
                 Configure Repository
               </h2>
-              
+
               <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Uploaded Files</h3>
+                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+                    <FileTree entries={files} onSelectFile={setPreviewFile} />
+                  </div>
+                  {previewFile && previewFile.content !== undefined && (
+                    <div className="mt-3">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Preview: {previewFile.path}
+                      </h4>
+                      <pre className="text-xs whitespace-pre-wrap bg-gray-100 dark:bg-gray-900 rounded-md p-2 overflow-x-auto">
+                        {previewFile.content}
+                      </pre>
+                    </div>
+                  )}
+                </div>
                 <div>
                   <label htmlFor="repoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Repository Name *
@@ -495,29 +534,17 @@ const NewRepository: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Target Account
                   </label>
-                  <div className="flex items-center p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-800">
-                    {activeAccount.avatarUrl ? (
-                      <img 
-                        src={activeAccount.avatarUrl} 
-                        alt={activeAccount.username} 
-                        className="h-8 w-8 rounded-full"
-                      />
-                    ) : (
-                      <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                          {activeAccount.username.slice(0, 1).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {activeAccount.name || activeAccount.username}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        @{activeAccount.username}
-                      </p>
-                    </div>
-                  </div>
+                  <select
+                    value={activeAccountId || ''}
+                    onChange={(e) => setActiveAccountId(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name || acc.username} (@{acc.username})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
@@ -698,29 +725,18 @@ const NewRepository: React.FC = () => {
                       {selectedFiles.length === files.filter(f => f.type === 'file').length ? 'Deselect All' : 'Select All'}
                     </Button>
                   </div>
-                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md">
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {files.map((file, index) => (
-                        <li key={index} className="p-2 flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`file-${index}`}
-                            checked={selectedFiles.includes(file.path)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedFiles([...selectedFiles, file.path]);
-                              } else {
-                                setSelectedFiles(selectedFiles.filter(f => f !== file.path));
-                              }
-                            }}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor={`file-${index}`} className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                            {file.path}
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+                    <FileTree
+                      entries={files}
+                      selectedPaths={selectedFiles}
+                      onToggleSelect={(path, checked) => {
+                        if (checked) {
+                          setSelectedFiles([...selectedFiles, path]);
+                        } else {
+                          setSelectedFiles(selectedFiles.filter(f => f !== path));
+                        }
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -813,15 +829,8 @@ const NewRepository: React.FC = () => {
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Files ({selectedFiles.length})
                       </p>
-                      <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2">
-                        <ul className="text-sm text-gray-800 dark:text-gray-200 space-y-1">
-                          {selectedFiles.map((file, index) => (
-                            <li key={index} className="flex items-center">
-                              <Check className="h-3 w-3 text-green-500 mr-2" />
-                              {file}
-                            </li>
-                          ))}
-                        </ul>
+                      <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+                        <FileTree entries={selectedTree} />
                       </div>
                     </div>
                   </div>
