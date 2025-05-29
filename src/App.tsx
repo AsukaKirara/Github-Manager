@@ -6,6 +6,7 @@ import AppLayout from './components/layout/AppLayout';
 import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
 import NewRepository from './pages/NewRepository';
+import Repositories from './pages/Repositories';
 import Settings from './pages/Settings';
 import Auth from './pages/Auth';
 import { Toaster } from './components/ui/Toaster';
@@ -22,11 +23,12 @@ function App() {
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/accounts" element={<Accounts />} />
+                <Route path="/repositories" element={<Repositories />} />
                 <Route path="/new-repository" element={<NewRepository />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
             </Route>
-            <Route path="*" element={<Navigate to="/\" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <Toaster />
         </Router>
