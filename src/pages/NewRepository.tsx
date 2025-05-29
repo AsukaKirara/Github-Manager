@@ -1,16 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone, DropEvent } from 'react-dropzone';
 import { getFilesFromDataTransfer } from '../utils/dropHelpers';
-import {
-  GitBranch,
-  Upload,
-  Eye,
-  FolderOpen,
-  FileText,
-  Lock,
-  Unlock,
-  Check,
-} from 'lucide-react';
+import { GitBranch, Upload, Eye, FolderOpen, FileText, Lock, Unlock, Check } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAppContext } from '../context/AppContext';
 import FileTree from '../components/FileTree';
@@ -109,7 +100,6 @@ const NewRepository: React.FC = () => {
 
     setIsProcessing(true);
     setPreviewFile(null);
-
     try {
       const processedFiles = await processUploadedFiles(filesToProcess);
       setFiles(processedFiles);
