@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, DropEvent } from 'react-dropzone';
+import { getFilesFromDataTransfer } from '../utils/dropHelpers';
 import { GitBranch, Upload, Eye, FolderOpen, FileText, Lock, Unlock, Check } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { useAppContext } from '../context/AppContext';
@@ -72,14 +73,15 @@ const NewRepository: React.FC = () => {
   
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
-    
+    const filesToProcess = acceptedFiles;
+
     setIsProcessing(true);
-    
+
     try {
-      const processedFiles = await processUploadedFiles(acceptedFiles);
+      const processedFiles = await processUploadedFiles(filesToProcess);
       setFiles(processedFiles);
       setStep('configure');
-      
+
       // Set all files as selected by default
       const allFilePaths = processedFiles
         .filter(file => file.type === 'file')
@@ -103,9 +105,16 @@ const NewRepository: React.FC = () => {
     }
   }, [addToast]);
   
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    noClick: isProcessing
+    noClick: isProcessing,
+    getFilesFromEvent: (event) => {
+      const items = (event as any).dataTransfer?.items;
+      if (items && Array.from(items).some((i: any) => i.webkitGetAsEntry?.())) {
+        return getFilesFromDataTransfer(items);
+      }
+      return (event as any).target?.files ? Promise.resolve(Array.from((event as any).target.files)) : Promise.resolve([]);
+    }
   });
   
   const handleConfigureNext = () => {
@@ -374,7 +383,7 @@ const NewRepository: React.FC = () => {
                   'border-gray-300 dark:border-gray-700'
                 } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
-                <input {...getInputProps()} />
+                <input {...getInputProps({ webkitdirectory: 'true', directory: '', multiple: true })} />
                 <div className="text-center">
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <p className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
