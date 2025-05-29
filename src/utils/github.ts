@@ -168,7 +168,10 @@ export const createCommit = async (
       }
     );
     
-    if (defaultBranchResponse2.ok) {
+
+    if (!defaultBranchResponse2.ok) {
+      baseSha = undefined;
+    } else {
       const defaultBranchData = await defaultBranchResponse2.json();
       baseSha = defaultBranchData.object.sha;
     }

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { FileEntry } from '../types';
 import { Folder, File as FileIcon } from 'lucide-react';
 
