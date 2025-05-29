@@ -137,7 +137,7 @@ export const createCommit = async (
   );
 
   // If the branch doesn't exist yet, we'll create it based on the default branch
-  let baseSha;
+  let baseSha: string | undefined;
   if (!refResponse.ok) {
     // Get the default branch
     const defaultBranchResponse = await fetch(
@@ -168,6 +168,7 @@ export const createCommit = async (
       }
     );
     
+
     if (!defaultBranchResponse2.ok) {
       baseSha = undefined;
     } else {
@@ -180,6 +181,9 @@ export const createCommit = async (
   }
 
   // Create a new tree
+  const treeBody: any = { tree: treeItems };
+  if (baseSha) treeBody.base_tree = baseSha;
+
   const treeResponse = await fetch(
     `https://api.github.com/repos/${account.username}/${repoName}/git/trees`,
     {
@@ -189,16 +193,7 @@ export const createCommit = async (
         Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(
-        baseSha
-          ? {
-              base_tree: baseSha,
-              tree: treeItems,
-            }
-          : {
-              tree: treeItems,
-            }
-      ),
+      body: JSON.stringify(treeBody),
     }
   );
 
@@ -209,6 +204,9 @@ export const createCommit = async (
   const treeData = await treeResponse.json();
 
   // Create a commit
+  const commitBody: any = { message, tree: treeData.sha };
+  if (baseSha) commitBody.parents = [baseSha];
+
   const commitResponse = await fetch(
     `https://api.github.com/repos/${account.username}/${repoName}/git/commits`,
     {
@@ -218,11 +216,7 @@ export const createCommit = async (
         Accept: 'application/vnd.github.v3+json',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        message,
-        tree: treeData.sha,
-        parents: baseSha ? [baseSha] : [],
-      }),
+      body: JSON.stringify(commitBody),
     }
   );
 
@@ -233,8 +227,13 @@ export const createCommit = async (
   const commitData = await commitResponse.json();
 
   // Update or create the reference
-  const updateRefUrl = `https://api.github.com/repos/${account.username}/${repoName}/git/refs/heads/${branch}`;
+  const updateRefUrl = refResponse.ok
+    ? `https://api.github.com/repos/${account.username}/${repoName}/git/refs/heads/${branch}`
+    : `https://api.github.com/repos/${account.username}/${repoName}/git/refs`;
   const updateRefMethod = refResponse.ok ? 'PATCH' : 'POST';
+  const updateRefBody = refResponse.ok
+    ? { sha: commitData.sha, force: false }
+    : { ref: `refs/heads/${branch}`, sha: commitData.sha };
 
   const updateRefResponse = await fetch(updateRefUrl, {
     method: updateRefMethod,
@@ -243,10 +242,7 @@ export const createCommit = async (
       Accept: 'application/vnd.github.v3+json',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      sha: commitData.sha,
-      force: false,
-    }),
+    body: JSON.stringify(updateRefBody),
   });
 
   if (!updateRefResponse.ok) {

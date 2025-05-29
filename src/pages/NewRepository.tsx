@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { useDropzone, DropEvent } from 'react-dropzone';
+
+import { useDropzone } from 'react-dropzone';
+
 import { getFilesFromDataTransfer } from '../utils/dropHelpers';
 import { GitBranch, Upload, Eye, FolderOpen, FileText, Lock, Unlock, Check } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -7,7 +9,8 @@ import { useAppContext } from '../context/AppContext';
 import FileTree from '../components/FileTree';
 import { useToast } from '../components/ui/Toaster';
 import { FileEntry, Repository } from '../types';
-import { processUploadedFiles } from '../utils/fileProcessor';
+import { processUploadedFiles, getFilesForCommit } from '../utils/fileProcessor';
+import FileTree from '../components/FileTree';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
 import { useLocation } from 'react-router-dom';
@@ -84,13 +87,11 @@ const NewRepository: React.FC = () => {
   };
 
   const toggleAllFiles = () => {
-    const fileEntries = files.filter(file => file.type === 'file');
-    if (selectedFiles.length === fileEntries.length) {
-      // If all files are selected, deselect all
+    const allPaths = getFilesForCommit(files);
+    if (selectedFiles.length === allPaths.length) {
       setSelectedFiles([]);
     } else {
-      // Otherwise, select all files
-      setSelectedFiles(fileEntries.map(file => file.path));
+      setSelectedFiles(allPaths);
     }
   };
   
@@ -99,16 +100,13 @@ const NewRepository: React.FC = () => {
     const filesToProcess = acceptedFiles;
 
     setIsProcessing(true);
-    setPreviewFile(null);
     try {
       const processedFiles = await processUploadedFiles(filesToProcess);
       setFiles(processedFiles);
       setStep('configure');
 
       // Set all files as selected by default
-      const allFilePaths = processedFiles
-        .filter(file => file.type === 'file')
-        .map(file => file.path);
+      const allFilePaths = getFilesForCommit(processedFiles);
       setSelectedFiles(allFilePaths);
       
       addToast({
@@ -308,7 +306,7 @@ const NewRepository: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
         {/* Progress Steps */}
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <div className={`px-6 py-4 ${creationMode === 'empty' ? 'justify-center' : 'justify-between'}`}>
+          <div className={`px-6 py-4 flex items-center space-x-4 ${creationMode === 'empty' ? 'justify-center' : 'justify-between'}`}>
             {creationMode === 'fromFiles' && (
               <>
                 <div className="flex items-center">
@@ -722,14 +720,16 @@ const NewRepository: React.FC = () => {
                       onClick={toggleAllFiles}
                       className="text-xs"
                     >
-                      {selectedFiles.length === files.filter(f => f.type === 'file').length ? 'Deselect All' : 'Select All'}
+                      {selectedFiles.length === getFilesForCommit(files).length ? 'Deselect All' : 'Select All'}
                     </Button>
                   </div>
-                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-gray-50 dark:bg-gray-800">
+                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
                     <FileTree
                       entries={files}
-                      selectedPaths={selectedFiles}
-                      onToggleSelect={(path, checked) => {
+                      showCheckboxes
+                      selectedFiles={selectedFiles}
+                      onToggleFile={(path, checked) => {
+
                         if (checked) {
                           setSelectedFiles([...selectedFiles, path]);
                         } else {
@@ -829,8 +829,13 @@ const NewRepository: React.FC = () => {
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                         Files ({selectedFiles.length})
                       </p>
-                      <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-800">
-                        <FileTree entries={selectedTree} />
+
+                      <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2">
+                        <FileTree
+                          entries={files}
+                          selectedFiles={selectedFiles}
+                          highlightSelected
+                        />
                       </div>
                     </div>
                   </div>

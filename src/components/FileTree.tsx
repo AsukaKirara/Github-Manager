@@ -1,62 +1,74 @@
 import React from 'react';
-import { Folder, FileText } from 'lucide-react';
-import { FileEntry } from '../types';
 
-interface FileTreeProps {
+import { FileEntry } from '../types';
+import { Folder, File as FileIcon } from 'lucide-react';
+
+export interface FileTreeProps {
   entries: FileEntry[];
-  onSelectFile?: (file: FileEntry) => void;
-  selectedPaths?: string[];
-  onToggleSelect?: (path: string, checked: boolean) => void;
-  level?: number;
+  basePath?: string;
+  showCheckboxes?: boolean;
+  selectedFiles?: string[];
+  onToggleFile?: (path: string, checked: boolean) => void;
+  highlightSelected?: boolean;
 }
 
 const FileTree: React.FC<FileTreeProps> = ({
   entries,
-  onSelectFile,
-  selectedPaths = [],
-  onToggleSelect,
-  level = 0,
+  basePath = '',
+  showCheckboxes = false,
+  selectedFiles = [],
+  onToggleFile,
+  highlightSelected = false,
 }) => {
   return (
-    <ul className={level === 0 ? 'space-y-1' : 'space-y-1 pl-4'}>
-      {entries.map((entry, idx) => (
-        <li key={idx}>
-          <div className="flex items-center">
-            {entry.type === 'directory' ? (
-              <Folder className="h-4 w-4 mr-1 text-gray-500" />
-            ) : (
-              <FileText className="h-4 w-4 mr-1 text-gray-500" />
-            )}
-            {entry.type === 'file' && onToggleSelect && (
-              <input
-                type="checkbox"
-                className="mr-1 h-3 w-3"
-                checked={selectedPaths.includes(entry.path)}
-                onChange={(e) => onToggleSelect(entry.path, e.target.checked)}
+    <ul className="ml-4 space-y-1">
+      {entries.map((entry) => {
+        const fullPath = basePath ? `${basePath}${entry.path}` : entry.path;
+        if (entry.type === 'file') {
+          return (
+            <li
+              key={fullPath}
+              className={`flex items-center space-x-1 ${
+                highlightSelected && selectedFiles.includes(fullPath)
+                  ? 'text-blue-600'
+                  : ''
+              }`}
+            >
+              {showCheckboxes && (
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 mr-1"
+                  checked={selectedFiles.includes(fullPath)}
+                  onChange={(e) => onToggleFile?.(fullPath, e.target.checked)}
+                />
+              )}
+              <FileIcon className="h-4 w-4 text-gray-500" />
+              <span className="text-sm">{entry.path}</span>
+            </li>
+          );
+        }
+        return (
+          <li key={fullPath} className="space-y-1">
+            <div className="flex items-center space-x-1">
+              <Folder className="h-4 w-4 text-gray-600" />
+              <span className="text-sm font-medium">{entry.path}</span>
+            </div>
+            {entry.children && (
+              <FileTree
+                entries={entry.children}
+                basePath={`${fullPath}/`}
+                showCheckboxes={showCheckboxes}
+                selectedFiles={selectedFiles}
+                onToggleFile={onToggleFile}
+                highlightSelected={highlightSelected}
               />
             )}
-            <span
-              className={`text-sm ${
-                entry.type === 'file' && onSelectFile ? 'cursor-pointer hover:underline' : ''
-              }`}
-              onClick={() => entry.type === 'file' && onSelectFile?.(entry)}
-            >
-              {entry.path}
-            </span>
-          </div>
-          {entry.children && entry.children.length > 0 && (
-            <FileTree
-              entries={entry.children}
-              onSelectFile={onSelectFile}
-              selectedPaths={selectedPaths}
-              onToggleSelect={onToggleSelect}
-              level={level + 1}
-            />
-          )}
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 };
 
 export default FileTree;
+
