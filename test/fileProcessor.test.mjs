@@ -36,8 +36,9 @@ test('processUploadedFiles preserves directory structure', async () => {
   Object.defineProperty(file, 'webkitRelativePath', { value: 'dir/sub/file.txt' });
   const result = await processUploadedFiles([file]);
   assert.equal(result.length, 1);
+  assert.equal(result[0].path, 'sub');
   assert.equal(result[0].type, 'directory');
-  assert.equal(result[0].children[0].children[0].path, 'file.txt');
+  assert.equal(result[0].children[0].path, 'file.txt');
 });
 
 test('processUploadedFiles unzips archives', async () => {
@@ -47,9 +48,8 @@ test('processUploadedFiles unzips archives', async () => {
   const buf = await zip.generateAsync({ type: 'nodebuffer' });
   const zipFile = new File([buf], 'archive.zip', { type: 'application/zip' });
   const result = await processUploadedFiles([zipFile]);
-  const dir = result.find(e => e.path === 'a');
-  const entry = dir && dir.children[0];
-  assert.ok(entry && entry.path === 'b.txt');
+  const entry = result.find(e => e.path === 'b.txt');
+  assert.ok(entry);
   assert.equal(entry.content, 'zipcontent');
 });
 

@@ -38,8 +38,7 @@ export const processUploadedFiles = async (
       addFileToHierarchy(result, entry);
     }
   }
-
-  return result;
+  return stripSingleTopLevelDirectory(result);
 };
 
 const processZipFile = async (zipFile: File): Promise<FileEntry[]> => {
@@ -158,6 +157,13 @@ const addFileToHierarchy = (hierarchy: FileEntry[], entry: FileEntry): void => {
       path: filename // Update path to just the filename at this level
     });
   }
+};
+
+const stripSingleTopLevelDirectory = (entries: FileEntry[]): FileEntry[] => {
+  if (entries.length === 1 && entries[0].type === 'directory') {
+    return entries[0].children ?? [];
+  }
+  return entries;
 };
 
 export const getFilesForCommit = (
