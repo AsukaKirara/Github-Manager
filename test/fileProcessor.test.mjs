@@ -19,7 +19,7 @@ if (!existsSync(outputFile)) {
   ], { stdio: 'inherit' });
 }
 
-const { processUploadedFiles, getFilesForCommit } = await import('../dist-test/utils/fileProcessor.js');
+const { processUploadedFiles, getFilesForCommit, flattenFileTree } = await import('../dist-test/utils/fileProcessor.js');
 
 test('processUploadedFiles handles single file', async () => {
   const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
@@ -62,4 +62,14 @@ test('getFilesForCommit filters by ignore patterns', () => {
   ];
   const files = getFilesForCommit(tree, ['node_modules/*']);
   assert.deepEqual(files, ['file1.txt']);
+});
+
+test('flattenFileTree returns entries with full paths', () => {
+  const tree = [
+    { path: 'src', type: 'directory', children: [
+      { path: 'index.js', type: 'file', content: 'x' }
+    ] }
+  ];
+  const flat = flattenFileTree(tree);
+  assert.deepEqual(flat.map(f => f.path), ['src/index.js']);
 });
