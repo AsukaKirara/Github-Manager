@@ -178,6 +178,15 @@ const Repositories: React.FC = () => {
     </li>
   );
 
+
+  const reposByAccount = repos.reduce<Record<string, RepoWithAccount[]>>(
+    (acc, repo) => {
+      (acc[repo.account.id] ||= []).push(repo);
+      return acc;
+    },
+    {}
+  );
+
   return (
     <div className="container mx-auto max-w-4xl">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -210,34 +219,28 @@ const Repositories: React.FC = () => {
         </h2>
         {repos.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No repositories found.</p>
-        ) : viewMode === 'all' ? (
-          <div
-            className="grid gap-4"
-            style={{ gridTemplateColumns: `repeat(${accounts.length}, minmax(0, 1fr))` }}
-          >
-            {accounts.map(acc => {
-              const list = repos.filter(r => r.account.id === acc.id);
-              return (
-                <div key={acc.id} className="border rounded-md p-4">
-                  <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                    {acc.username}
-                  </h3>
-                  {list.length === 0 ? (
-                    <p className="text-gray-500 dark:text-gray-400">No repositories</p>
-                  ) : (
-                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {list.map(renderRepoItem)}
-                    </ul>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
+
+        ) : viewMode === 'active' ? (
           <ul className="divide-y divide-gray-200 dark:divide-gray-700">
             {repos.map(renderRepoItem)}
 
           </ul>
+        ) : (
+          <div
+            className="grid gap-6"
+            style={{ gridTemplateColumns: `repeat(${accounts.length}, minmax(0, 1fr))` }}
+          >
+            {accounts.map(acc => (
+              <div key={acc.id} className="bg-gray-50 dark:bg-gray-900/40 rounded-md p-4">
+                <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  {acc.username}
+                </h3>
+                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {(reposByAccount[acc.id] || []).map(renderRepoItem)}
+                </ul>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
