@@ -12,6 +12,7 @@ import { FileEntry, Repository } from '../types';
 import { processUploadedFiles, getFilesForCommit, flattenFileTree, deriveRepoNameFromUpload } from '../utils/fileProcessor';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
+import { debugLog } from '../utils/logger';
 import { useLocation } from 'react-router-dom';
 
 const NewRepository: React.FC = () => {
@@ -194,6 +195,10 @@ const NewRepository: React.FC = () => {
     setIsCreating(true);
     
     try {
+      debugLog('Starting repository creation', {
+        mode: creationMode,
+        name: repoName,
+      });
       const repositoryData = {
         name: repoName,
         description: repoDescription,
@@ -207,6 +212,7 @@ const NewRepository: React.FC = () => {
       // For the 'empty' mode, we pass slightly different data to createRepository
       // and we don't create an initial commit with files here.
       if (creationMode === 'empty') {
+        debugLog('Creating empty repository on GitHub');
         await createRepository(activeAccount, {
           name: repoName,
           description: repoDescription,
@@ -225,8 +231,11 @@ const NewRepository: React.FC = () => {
         };
         // auto_init must be true so that blob creation doesn't fail on an
         // empty repository
+        debugLog('Creating repository from files on GitHub');
+
         await createRepository(activeAccount, repositoryObject, true);
         const allFiles = flattenFileTree(files);
+        debugLog('Creating initial commit with files', selectedFiles);
         await createCommit(
           activeAccount,
           repoName,
@@ -235,6 +244,8 @@ const NewRepository: React.FC = () => {
           allFiles.filter(file => selectedFiles.includes(file.path))
         );
       }
+
+      debugLog('Repository creation flow finished');
       
       addToast({
         title: 'Repository created',
@@ -244,6 +255,7 @@ const NewRepository: React.FC = () => {
       
       resetForm();
     } catch (error) {
+      debugLog('Repository creation failed', error);
       addToast({
         title: 'Repository creation failed',
         description: error instanceof Error ? error.message : 'Unknown error occurred',
