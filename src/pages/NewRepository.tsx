@@ -198,8 +198,9 @@ const NewRepository: React.FC = () => {
         name: repoName,
         description: repoDescription,
         visibility: repoVisibility,
-        // For empty repo, auto_init handles readme. For fromFiles, branchName is used.
-        auto_init: creationMode === 'empty' ? withReadme : false, 
+        // auto_init ensures the repository has an initial commit. When creating
+        // from files we enable it so subsequent API calls succeed.
+        auto_init: creationMode === 'empty' ? withReadme : true,
       };
 
       // Create repository on GitHub
@@ -222,7 +223,9 @@ const NewRepository: React.FC = () => {
           defaultBranch: branchName,
           files: files
         };
-        await createRepository(activeAccount, repositoryObject, false);
+        // auto_init must be true so that blob creation doesn't fail on an
+        // empty repository
+        await createRepository(activeAccount, repositoryObject, true);
         const allFiles = flattenFileTree(files);
         await createCommit(
           activeAccount,
@@ -733,12 +736,22 @@ const NewRepository: React.FC = () => {
                       entries={files}
                       showCheckboxes
                       selectedFiles={selectedFiles}
-                      onToggleFile={(path, checked) => {
-
-                        if (checked) {
-                          setSelectedFiles([...selectedFiles, path]);
+                      onToggleFile={(path, checked, isDir) => {
+                        if (isDir) {
+                          const all = flattenFileTree(files)
+                            .filter(f => f.path.startsWith(`${path}/`))
+                            .map(f => f.path);
+                          if (checked) {
+                            setSelectedFiles(prev => Array.from(new Set([...prev, ...all])));
+                          } else {
+                            setSelectedFiles(prev => prev.filter(p => !p.startsWith(`${path}/`)));
+                          }
                         } else {
-                          setSelectedFiles(selectedFiles.filter(f => f !== path));
+                          if (checked) {
+                            setSelectedFiles([...selectedFiles, path]);
+                          } else {
+                            setSelectedFiles(selectedFiles.filter(f => f !== path));
+                          }
                         }
                       }}
                     />
@@ -837,9 +850,7 @@ const NewRepository: React.FC = () => {
 
                       <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2">
                         <FileTree
-                          entries={files}
-                          selectedFiles={selectedFiles}
-                          highlightSelected
+                          entries={selectedTree}
                         />
                       </div>
                     </div>
