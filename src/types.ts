@@ -24,6 +24,7 @@ export interface FileEntry {
   path: string;
   type: 'file' | 'directory';
   content?: string;
+  isBinary?: boolean;
   size?: number;
   children?: FileEntry[];
 }

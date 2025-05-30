@@ -1,5 +1,7 @@
 import { GithubAccount, Repository, FileEntry } from '../types';
 
+declare const Buffer: any;
+
 export const fetchUserData = async (token: string) => {
   const response = await fetch('https://api.github.com/user', {
     headers: {
@@ -104,7 +106,7 @@ export const createCommit = async (
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            content: toBase64(typeof file.content === 'string' ? file.content : ''),
+            content: file.isBinary ? (file.content || '') : toBase64(typeof file.content === 'string' ? file.content : ''),
             encoding: 'base64',
           }),
         });
