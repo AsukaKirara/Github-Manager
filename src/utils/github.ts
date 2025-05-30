@@ -1,5 +1,15 @@
 import { GithubAccount, Repository, FileEntry } from '../types';
 
+const DEBUG_LOGGING = typeof import.meta !== 'undefined' &&
+  ((import.meta as any).env?.VITE_DEBUG_LOG === 'true' ||
+   (import.meta as any).env?.MODE !== 'production');
+
+const debugLog = (...args: any[]) => {
+  if (DEBUG_LOGGING) {
+    console.log(...args);
+  }
+};
+
 declare const Buffer: any;
 
 export const fetchUserData = async (token: string) => {
@@ -37,6 +47,7 @@ export const createRepository = async (
   repository: Repository,
   autoInit = false
 ) => {
+  debugLog('createRepository request', { repository: repository.name, autoInit });
   const response = await fetch('https://api.github.com/user/repos', {
     method: 'POST',
     headers: {
@@ -54,12 +65,15 @@ export const createRepository = async (
 
   if (!response.ok) {
     const errorData = await response.json();
+    debugLog('createRepository failed', errorData);
     throw new Error(
       errorData.message || `GitHub API error: ${response.statusText}`
     );
   }
 
-  return response.json();
+  const result = await response.json();
+  debugLog('createRepository success');
+  return result;
 };
 
 const toBase64 = (content: string): string => {
@@ -77,6 +91,7 @@ export const createCommit = async (
   message: string,
   files: FileEntry[]
 ) => {
+  debugLog('createCommit start', { repo: repoName, branch, files: files.length });
   const encodedRepo = encodeURIComponent(repoName);
   const encodedBranch = encodeURIComponent(branch);
   // This is a simplified version - in a real app this would be more complex
@@ -100,7 +115,7 @@ export const createCommit = async (
       .filter(file => file.type === 'file')
       .map(async file => {
         // Create a blob for the file
-
+        debugLog('createCommit blob', file.path);
         const blobResponse = await fetch(`https://api.github.com/repos/${account.username}/${encodedRepo}/git/blobs`, {
 
           method: 'POST',
@@ -117,6 +132,7 @@ export const createCommit = async (
 
         if (!blobResponse.ok) {
           const errorText = await blobResponse.text();
+          debugLog('createCommit blob failed', file.path, errorText);
           throw new Error(`Failed to create blob for ${file.path}: ${errorText}`);
         }
 
@@ -158,6 +174,7 @@ export const createCommit = async (
     );
     
     if (!defaultBranchResponse.ok) {
+      debugLog('createCommit repo info failed');
       throw new Error(`Failed to get repository information`);
     }
     
@@ -181,10 +198,12 @@ export const createCommit = async (
     } else {
       const defaultBranchData = await defaultBranchResponse2.json();
       baseSha = defaultBranchData.object.sha;
+      debugLog('createCommit default branch sha', baseSha);
     }
   } else {
     const refData = await refResponse.json();
     baseSha = refData.object.sha;
+    debugLog('createCommit branch sha', baseSha);
   }
 
   // Create a new tree
@@ -205,10 +224,12 @@ export const createCommit = async (
   );
 
   if (!treeResponse.ok) {
+    debugLog('createCommit tree failed');
     throw new Error(`Failed to create tree`);
   }
 
   const treeData = await treeResponse.json();
+  debugLog('createCommit tree created');
 
   // Create a commit
   const commitBody: any = { message, tree: treeData.sha };
@@ -229,10 +250,12 @@ export const createCommit = async (
   );
 
   if (!commitResponse.ok) {
+    debugLog('createCommit commit failed');
     throw new Error(`Failed to create commit`);
   }
 
   const commitData = await commitResponse.json();
+  debugLog('createCommit commit created');
 
   // Update or create the reference
   const updateRefUrl = refResponse.ok
@@ -255,9 +278,11 @@ export const createCommit = async (
   });
 
   if (!updateRefResponse.ok) {
+    debugLog('createCommit updateRef failed');
     throw new Error(`Failed to update reference`);
   }
 
+  debugLog('createCommit success');
   return updateRefResponse.json();
 };
 
