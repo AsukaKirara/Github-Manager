@@ -1,5 +1,7 @@
 import { GithubAccount, Repository, FileEntry } from '../types';
 
+declare const Buffer: any;
+
 export const fetchUserData = async (token: string) => {
   const response = await fetch('https://api.github.com/user', {
     headers: {
@@ -98,7 +100,9 @@ export const createCommit = async (
       .filter(file => file.type === 'file')
       .map(async file => {
         // Create a blob for the file
+
         const blobResponse = await fetch(`https://api.github.com/repos/${account.username}/${encodedRepo}/git/blobs`, {
+
           method: 'POST',
           headers: {
             Authorization: `token ${account.token}`,
@@ -106,7 +110,7 @@ export const createCommit = async (
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            content: toBase64(typeof file.content === 'string' ? file.content : ''),
+            content: file.isBinary ? (file.content || '') : toBase64(typeof file.content === 'string' ? file.content : ''),
             encoding: 'base64',
           }),
         });
@@ -144,6 +148,7 @@ export const createCommit = async (
     // Get the default branch
     const defaultBranchResponse = await fetch(
       `https://api.github.com/repos/${account.username}/${encodedRepo}`,
+
       {
         headers: {
           Authorization: `token ${account.token}`,
@@ -210,6 +215,7 @@ export const createCommit = async (
   if (baseSha) commitBody.parents = [baseSha];
 
   const commitResponse = await fetch(
+
     `https://api.github.com/repos/${account.username}/${encodedRepo}/git/commits`,
     {
       method: 'POST',
@@ -232,6 +238,7 @@ export const createCommit = async (
   const updateRefUrl = refResponse.ok
     ? `https://api.github.com/repos/${account.username}/${encodedRepo}/git/refs/heads/${encodedBranch}`
     : `https://api.github.com/repos/${account.username}/${encodedRepo}/git/refs`;
+
   const updateRefMethod = refResponse.ok ? 'PATCH' : 'POST';
   const updateRefBody = refResponse.ok
     ? { sha: commitData.sha, force: false }
@@ -301,6 +308,7 @@ export const transferRepository = async (
   const encodedRepo = encodeURIComponent(repoName);
   const response = await fetch(
     `https://api.github.com/repos/${account.username}/${encodedRepo}/transfer`,
+
     {
       method: 'POST',
       headers: {

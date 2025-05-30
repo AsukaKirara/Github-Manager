@@ -83,3 +83,4 @@ test('flattenFileTree removes trailing slashes', () => {
   const flat = flattenFileTree(tree);
   assert.deepEqual(flat.map(f => f.path), ['dir/a.txt']);
 });
+
