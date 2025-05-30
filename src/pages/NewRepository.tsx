@@ -9,7 +9,7 @@ import { useAppContext } from '../context/AppContext';
 import FileTree from '../components/FileTree';
 import { useToast } from '../components/ui/Toaster';
 import { FileEntry, Repository } from '../types';
-import { processUploadedFiles, getFilesForCommit, flattenFileTree } from '../utils/fileProcessor';
+import { processUploadedFiles, getFilesForCommit, flattenFileTree, deriveRepoNameFromUpload } from '../utils/fileProcessor';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
 import { useLocation } from 'react-router-dom';
@@ -97,6 +97,11 @@ const NewRepository: React.FC = () => {
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
     const filesToProcess = acceptedFiles;
+
+    const suggestedName = deriveRepoNameFromUpload(acceptedFiles);
+    if (suggestedName) {
+      setRepoName(suggestedName);
+    }
 
     setIsProcessing(true);
     try {
