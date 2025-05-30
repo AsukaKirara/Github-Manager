@@ -83,6 +83,7 @@ const Repositories: React.FC = () => {
     load();
   }, [viewMode, activeAccount, accounts]);
 
+
   if (viewMode === 'active' && !activeAccount) {
     return (
       <div className="container mx-auto max-w-4xl p-6 text-center">
@@ -177,6 +178,7 @@ const Repositories: React.FC = () => {
     </li>
   );
 
+
   const reposByAccount = repos.reduce<Record<string, RepoWithAccount[]>>(
     (acc, repo) => {
       (acc[repo.account.id] ||= []).push(repo);
@@ -217,9 +219,11 @@ const Repositories: React.FC = () => {
         </h2>
         {repos.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No repositories found.</p>
+
         ) : viewMode === 'active' ? (
           <ul className="divide-y divide-gray-200 dark:divide-gray-700">
             {repos.map(renderRepoItem)}
+
           </ul>
         ) : (
           <div
