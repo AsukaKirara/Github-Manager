@@ -198,8 +198,9 @@ const NewRepository: React.FC = () => {
         name: repoName,
         description: repoDescription,
         visibility: repoVisibility,
-        // For empty repo, auto_init handles readme. For fromFiles, branchName is used.
-        auto_init: creationMode === 'empty' ? withReadme : false, 
+        // auto_init ensures the repository has an initial commit. When creating
+        // from files we enable it so subsequent API calls succeed.
+        auto_init: creationMode === 'empty' ? withReadme : true,
       };
 
       // Create repository on GitHub
@@ -222,7 +223,9 @@ const NewRepository: React.FC = () => {
           defaultBranch: branchName,
           files: files
         };
-        await createRepository(activeAccount, repositoryObject, false);
+        // auto_init must be true so that blob creation doesn't fail on an
+        // empty repository
+        await createRepository(activeAccount, repositoryObject, true);
         const allFiles = flattenFileTree(files);
         await createCommit(
           activeAccount,
