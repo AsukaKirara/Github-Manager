@@ -197,18 +197,35 @@ export const getFilesForCommit = (
 };
 
 const shouldIgnore = (path: string, ignorePatterns: string[]): boolean => {
-  for (const pattern of ignorePatterns) {
-    // Simple wildcard matching for now
+  for (const raw of ignorePatterns) {
+    const pattern = raw.trim();
+    if (!pattern) continue;
+
+    if (pattern === path) return true;
+
     if (pattern.endsWith('*')) {
       const prefix = pattern.slice(0, -1);
-      if (path.startsWith(prefix)) {
-        return true;
-      }
-    } else if (path === pattern) {
-      return true;
+      if (path.startsWith(prefix)) return true;
+    }
+
+    if (pattern.startsWith('*')) {
+      const suffix = pattern.slice(1);
+      if (path.endsWith(suffix)) return true;
+    }
+
+    if (pattern.endsWith('/')) {
+      const prefix = pattern.slice(0, -1);
+      if (path.startsWith(prefix)) return true;
     }
   }
   return false;
+};
+
+export const parseGitignore = (content: string): string[] => {
+  return content
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line !== '' && !line.startsWith('#'));
 };
 
 export const flattenFileTree = (entries: FileEntry[]): FileEntry[] => {
