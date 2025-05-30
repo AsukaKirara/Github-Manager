@@ -231,7 +231,6 @@ const NewRepository: React.FC = () => {
         };
         // auto_init must be true so that blob creation doesn't fail on an
         // empty repository
-        debugLog('Creating repository from files on GitHub');
 
         await createRepository(activeAccount, repositoryObject, true);
         const allFiles = flattenFileTree(files);
@@ -748,12 +747,22 @@ const NewRepository: React.FC = () => {
                       entries={files}
                       showCheckboxes
                       selectedFiles={selectedFiles}
-                      onToggleFile={(path, checked) => {
-
-                        if (checked) {
-                          setSelectedFiles([...selectedFiles, path]);
+                      onToggleFile={(path, checked, isDir) => {
+                        if (isDir) {
+                          const all = flattenFileTree(files)
+                            .filter(f => f.path.startsWith(`${path}/`))
+                            .map(f => f.path);
+                          if (checked) {
+                            setSelectedFiles(prev => Array.from(new Set([...prev, ...all])));
+                          } else {
+                            setSelectedFiles(prev => prev.filter(p => !p.startsWith(`${path}/`)));
+                          }
                         } else {
-                          setSelectedFiles(selectedFiles.filter(f => f !== path));
+                          if (checked) {
+                            setSelectedFiles([...selectedFiles, path]);
+                          } else {
+                            setSelectedFiles(selectedFiles.filter(f => f !== path));
+                          }
                         }
                       }}
                     />
@@ -852,9 +861,7 @@ const NewRepository: React.FC = () => {
 
                       <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2">
                         <FileTree
-                          entries={files}
-                          selectedFiles={selectedFiles}
-                          highlightSelected
+                          entries={selectedTree}
                         />
                       </div>
                     </div>
