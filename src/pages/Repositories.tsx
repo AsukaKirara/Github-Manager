@@ -121,27 +121,29 @@ const Repositories: React.FC = () => {
     }
   };
 
-  const renderRepoItem = (repo: RepoWithAccount) => (
-    <li key={repo.id} className="py-4 flex justify-between items-center">
-      <div>
+  const renderRepoItem = (repo: RepoWithAccount, isCompact: boolean = false) => (
+    <li key={repo.id} className={`py-3 ${isCompact ? '' : 'flex flex-col md:flex-row md:justify-between md:items-center gap-2'}`}>
+      <div className="flex-1 min-w-0">
         <a
           href={repo.html_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 dark:text-blue-400 hover:underline"
+          className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium truncate block"
         >
-          {repo.full_name}
+          {isCompact ? repo.name : repo.full_name}
         </a>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {repo.account.username}
-        </p>
+        {!isCompact && (
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            {repo.account.username}
+          </p>
+        )}
         {repo.description && (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
             {repo.description}
           </p>
         )}
       </div>
-      <div className="flex items-center space-x-2">
+      <div className={`flex ${isCompact ? 'flex-col' : 'flex-row'} items-center gap-2 mt-2 md:mt-0`}>
         <select
           value={transferTargets[repo.full_name] || ''}
           onChange={e =>
@@ -150,7 +152,7 @@ const Repositories: React.FC = () => {
               [repo.full_name]: e.target.value,
             })
           }
-          className="border rounded-md text-sm px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+          className="border rounded-md text-xs px-1 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 w-full"
         >
           <option value="">Transfer to...</option>
           {(orgsMap[repo.account.id] || []).map(org => (
@@ -159,21 +161,25 @@ const Repositories: React.FC = () => {
             </option>
           ))}
         </select>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => handleTransfer(repo)}
-          disabled={!transferTargets[repo.full_name]}
-        >
-          Transfer
-        </Button>
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => handleDelete(repo)}
-        >
-          Delete
-        </Button>
+        <div className={`flex ${isCompact ? 'w-full' : ''} gap-1`}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => handleTransfer(repo)}
+            disabled={!transferTargets[repo.full_name]}
+            className={isCompact ? 'flex-1' : ''}
+          >
+            Transfer
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => handleDelete(repo)}
+            className={isCompact ? 'flex-1' : ''}
+          >
+            Delete
+          </Button>
+        </div>
       </div>
     </li>
   );
@@ -189,7 +195,7 @@ const Repositories: React.FC = () => {
 
   return (
     <div className="container mx-auto max-w-4xl">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6">
         <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
           <nav className="-mb-px flex space-x-4">
             <button
@@ -222,22 +228,22 @@ const Repositories: React.FC = () => {
 
         ) : viewMode === 'active' ? (
           <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {repos.map(renderRepoItem)}
-
+            {repos.map(repo => renderRepoItem(repo))}
           </ul>
         ) : (
-          <div
-            className="grid gap-6"
-            style={{ gridTemplateColumns: `repeat(${accounts.length}, minmax(0, 1fr))` }}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {accounts.map(acc => (
-              <div key={acc.id} className="bg-gray-50 dark:bg-gray-900/40 rounded-md p-4">
-                <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2">
+              <div key={acc.id} className="bg-gray-50 dark:bg-gray-900/40 rounded-md p-3 h-full">
+                <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2 text-sm">
                   {acc.username}
                 </h3>
-                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {(reposByAccount[acc.id] || []).map(renderRepoItem)}
-                </ul>
+                {reposByAccount[acc.id]?.length ? (
+                  <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {(reposByAccount[acc.id] || []).map(repo => renderRepoItem(repo, true))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">No repositories</p>
+                )}
               </div>
             ))}
           </div>
