@@ -10,7 +10,6 @@ import FileTree from '../components/FileTree';
 import { useToast } from '../components/ui/Toaster';
 import { FileEntry, Repository } from '../types';
 import { processUploadedFiles, getFilesForCommit } from '../utils/fileProcessor';
-import FileTree from '../components/FileTree';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
 import { useLocation } from 'react-router-dom';
