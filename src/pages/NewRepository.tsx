@@ -9,7 +9,7 @@ import { useAppContext } from '../context/AppContext';
 import FileTree from '../components/FileTree';
 import { useToast } from '../components/ui/Toaster';
 import { FileEntry, Repository } from '../types';
-import { processUploadedFiles, getFilesForCommit, flattenFileTree, deriveRepoNameFromUpload } from '../utils/fileProcessor';
+import { processUploadedFiles, getFilesForCommit, flattenFileTree, deriveRepoNameFromUpload, parseGitignore } from '../utils/fileProcessor';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
 import { debugLog } from '../utils/logger';
@@ -87,7 +87,7 @@ const NewRepository: React.FC = () => {
   };
 
   const toggleAllFiles = () => {
-    const allPaths = getFilesForCommit(files);
+    const allPaths = getFilesForCommit(files, ignorePatterns);
     if (selectedFiles.length === allPaths.length) {
       setSelectedFiles([]);
     } else {
@@ -110,9 +110,17 @@ const NewRepository: React.FC = () => {
       setFiles(processedFiles);
       setStep('configure');
 
-      // Set all files as selected by default
-      const allFilePaths = getFilesForCommit(processedFiles);
-      setSelectedFiles(allFilePaths);
+      const flat = flattenFileTree(processedFiles);
+      const patterns: string[] = [];
+      flat.forEach(f => {
+        if (f.path.endsWith('.gitignore') && typeof f.content === 'string') {
+          patterns.push(...parseGitignore(f.content));
+        }
+      });
+      setIgnorePatterns(patterns);
+
+      const autoSelected = getFilesForCommit(processedFiles, patterns);
+      setSelectedFiles(autoSelected);
       
       addToast({
         title: 'Files uploaded',
@@ -739,7 +747,7 @@ const NewRepository: React.FC = () => {
                       onClick={toggleAllFiles}
                       className="text-xs"
                     >
-                      {selectedFiles.length === getFilesForCommit(files).length ? 'Deselect All' : 'Select All'}
+                      {selectedFiles.length === getFilesForCommit(files, ignorePatterns).length ? 'Deselect All' : 'Select All'}
                     </Button>
                   </div>
                   <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
@@ -856,12 +864,14 @@ const NewRepository: React.FC = () => {
                     
                     <div>
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Files ({selectedFiles.length})
+                        Files ({selectedFiles.length} of {getFilesForCommit(files, ignorePatterns).length})
                       </p>
 
                       <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2">
                         <FileTree
-                          entries={selectedTree}
+                          entries={files}
+                          selectedFiles={selectedFiles}
+                          highlightSelected
                         />
                       </div>
                     </div>
