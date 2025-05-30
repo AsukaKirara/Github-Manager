@@ -278,9 +278,9 @@ const NewRepository: React.FC = () => {
     return (
       <div className="container mx-auto max-w-4xl">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
-          <GitBranch className="mx-auto h-12 w-12 text-gray-400" />
+          <GitBranch className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-300" />
           <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-gray-100">No active account</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
             Please add and select an active GitHub account to create a repository
           </p>
           <Button 
@@ -298,7 +298,7 @@ const NewRepository: React.FC = () => {
     return (
       <div className="container mx-auto max-w-2xl py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center">
-          <GitBranch className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <GitBranch className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-300 mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-6">
             Create a New Repository
           </h2>
@@ -344,7 +344,7 @@ const NewRepository: React.FC = () => {
                   </div>
                   <div className="ml-3">
                     <p className={`text-sm font-medium ${
-                      step === 'upload' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
+                      step === 'upload' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'
                     }`}>
                       Upload Files
                     </p>
@@ -358,15 +358,15 @@ const NewRepository: React.FC = () => {
               <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
                 (step === 'configure' || step === 'configureSimple') ? 'bg-blue-500 text-white' : 
                 (creationMode === 'fromFiles' && (step === 'commit' || step === 'preview')) || (creationMode === 'empty' && step === 'previewSimple') ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 
-                'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
               }`}>
                 <GitBranch className="h-4 w-4" />
               </div>
               <div className="ml-3">
                 <p className={`text-sm font-medium ${
                   (step === 'configure' || step === 'configureSimple') ? 'text-gray-900 dark:text-gray-100' : 
-                  (creationMode === 'fromFiles' && (step === 'commit' || step === 'preview')) || (creationMode === 'empty' && step === 'previewSimple') ? 'text-gray-500 dark:text-gray-400' : 
-                  'text-gray-400 dark:text-gray-500'
+                  (creationMode === 'fromFiles' && (step === 'commit' || step === 'preview')) || (creationMode === 'empty' && step === 'previewSimple') ? 'text-gray-600 dark:text-gray-300' : 
+                  'text-gray-500 dark:text-gray-400'
                 }`}>
                   Configure Repository
                 </p>
@@ -380,15 +380,15 @@ const NewRepository: React.FC = () => {
                   <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
                     step === 'commit' ? 'bg-blue-500 text-white' : 
                     step === 'preview' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 
-                    'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                    'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                   }`}>
                     <FileText className="h-4 w-4" />
                   </div>
                   <div className="ml-3">
                     <p className={`text-sm font-medium ${
                       step === 'commit' ? 'text-gray-900 dark:text-gray-100' : 
-                      step === 'preview' ? 'text-gray-500 dark:text-gray-400' : 
-                      'text-gray-400 dark:text-gray-500'
+                      step === 'preview' ? 'text-gray-600 dark:text-gray-300' : 
+                      'text-gray-500 dark:text-gray-400'
                     }`}>
                       Commit Settings
                     </p>
@@ -401,13 +401,13 @@ const NewRepository: React.FC = () => {
             
             <div className="flex items-center">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                (step === 'preview' || step === 'previewSimple') ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
+                (step === 'preview' || step === 'previewSimple') ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
               }`}>
                 <Eye className="h-4 w-4" />
               </div>
               <div className="ml-3">
                 <p className={`text-sm font-medium ${
-                  (step === 'preview' || step === 'previewSimple') ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'
+                  (step === 'preview' || step === 'previewSimple') ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
                 }`}>
                   Preview & Create
                 </p>
@@ -433,11 +433,11 @@ const NewRepository: React.FC = () => {
               >
                 <input {...getInputProps({ webkitdirectory: 'true', directory: '', multiple: true })} />
                 <div className="text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-300" />
                   <p className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
                     {isDragActive ? 'Drop the files here...' : 'Drag and drop files or folders here'}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">
                     You can upload individual files, entire folders, or ZIP archives
                   </p>
                   {!isDragActive && !isProcessing && (
@@ -464,22 +464,36 @@ const NewRepository: React.FC = () => {
               </h2>
 
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Uploaded Files</h3>
-                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-800">
-                    <FileTree entries={files} onSelectFile={setPreviewFile} />
-                  </div>
-                  {previewFile && previewFile.content !== undefined && (
-                    <div className="mt-3">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Preview: {previewFile.path}
-                      </h4>
-                      <pre className="text-xs whitespace-pre-wrap bg-gray-100 dark:bg-gray-900 rounded-md p-2 overflow-x-auto">
-                        {previewFile.content}
-                      </pre>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Uploaded Files</h3>
+                    <div className="h-60 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-900">
+                      <FileTree 
+                        entries={files} 
+                        onSelectFile={setPreviewFile} 
+                        initiallyCollapsed={true}
+                      />
                     </div>
-                  )}
+                  </div>
+                  
+                  <div>
+                    {previewFile && previewFile.content !== undefined ? (
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Preview: {previewFile.path}
+                        </h3>
+                        <pre className="h-60 text-xs whitespace-pre-wrap bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md p-2 overflow-auto">
+                          {previewFile.content}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div className="h-60 flex items-center justify-center border border-gray-300 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-900">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Select a file to preview</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+
                 <div>
                   <label htmlFor="repoName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Repository Name *
@@ -750,7 +764,7 @@ const NewRepository: React.FC = () => {
                       {selectedFiles.length === getFilesForCommit(files, ignorePatterns).length ? 'Deselect All' : 'Select All'}
                     </Button>
                   </div>
-                  <div className="max-h-60 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
+                  <div className="h-60 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-md p-2 bg-gray-50 dark:bg-gray-900">
                     <FileTree
                       entries={files}
                       showCheckboxes
@@ -773,6 +787,7 @@ const NewRepository: React.FC = () => {
                           }
                         }
                       }}
+                      initiallyCollapsed={false}
                     />
                   </div>
                 </div>
@@ -797,7 +812,7 @@ const NewRepository: React.FC = () => {
               </h2>
               
               <div className="space-y-6">
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700">
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-md border border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">
                     Repository Details
                   </h3>
@@ -844,7 +859,7 @@ const NewRepository: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700">
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-md border border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">
                     Initial Commit
                   </h3>
@@ -867,11 +882,12 @@ const NewRepository: React.FC = () => {
                         Files ({selectedFiles.length} of {getFilesForCommit(files, ignorePatterns).length})
                       </p>
 
-                      <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2">
+                      <div className="mt-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-2 bg-white dark:bg-gray-800">
                         <FileTree
-                          entries={files}
+                          entries={selectedTree}
                           selectedFiles={selectedFiles}
                           highlightSelected
+                          initiallyCollapsed={false}
                         />
                       </div>
                     </div>
@@ -900,7 +916,7 @@ const NewRepository: React.FC = () => {
                 Preview & Create Repository
               </h2>
               <div className="space-y-6">
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700">
+                <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-md border border-gray-200 dark:border-gray-700">
                   <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-3">
                     Repository Details
                   </h3>
@@ -913,9 +929,9 @@ const NewRepository: React.FC = () => {
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Visibility</p>
                       <div className="flex items-center">
                         {repoVisibility === 'private' ? (
-                          <><Lock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-1" /><span>Private</span></>
+                          <><Lock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-1" /><span className="text-sm text-gray-800 dark:text-gray-200">Private</span></>
                         ) : (
-                          <><Unlock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-1" /><span>Public</span></>
+                          <><Unlock className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-1" /><span className="text-sm text-gray-800 dark:text-gray-200">Public</span></>
                         )}
                       </div>
                     </div>

@@ -49,7 +49,7 @@ const Repositories: React.FC = () => {
             fetchUserRepositories(activeAccount.token),
             fetchUserOrganizations(activeAccount.token),
           ]);
-          setRepos(r.map(repo => ({ ...repo, account: activeAccount })));
+          setRepos(r.map((repo: Repo) => ({ ...repo, account: activeAccount })));
           setOrgsMap({ [activeAccount.id]: o });
         } catch (err) {
           console.error(err);
@@ -58,7 +58,7 @@ const Repositories: React.FC = () => {
         try {
           const repoPromises = accounts.map(acc =>
             fetchUserRepositories(acc.token).then(list =>
-              list.map(repo => ({ ...repo, account: acc }))
+              list.map((repo: Repo) => ({ ...repo, account: acc }))
             )
           );
           const orgPromises = accounts.map(acc =>
@@ -133,12 +133,12 @@ const Repositories: React.FC = () => {
           {isCompact ? repo.name : repo.full_name}
         </a>
         {!isCompact && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-gray-600 dark:text-gray-300">
             {repo.account.username}
           </p>
         )}
         {repo.description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          <p className="text-xs text-gray-600 dark:text-gray-300 truncate">
             {repo.description}
           </p>
         )}
@@ -202,7 +202,7 @@ const Repositories: React.FC = () => {
               className={`px-3 py-2 text-sm font-medium border-b-2 focus:outline-none ${
                 viewMode === 'active'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  : 'border-transparent text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100'
               }`}
               onClick={() => setViewMode('active')}
             >
@@ -212,7 +212,7 @@ const Repositories: React.FC = () => {
               className={`px-3 py-2 text-sm font-medium border-b-2 focus:outline-none ${
                 viewMode === 'all'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  : 'border-transparent text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100'
               }`}
               onClick={() => setViewMode('all')}
             >
@@ -224,7 +224,7 @@ const Repositories: React.FC = () => {
           Repositories
         </h2>
         {repos.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400">No repositories found.</p>
+          <p className="text-gray-600 dark:text-gray-300">No repositories found.</p>
 
         ) : viewMode === 'active' ? (
           <ul className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -233,7 +233,7 @@ const Repositories: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {accounts.map(acc => (
-              <div key={acc.id} className="bg-gray-50 dark:bg-gray-900/40 rounded-md p-3 h-full">
+              <div key={acc.id} className="bg-gray-50 dark:bg-gray-900 rounded-md p-3 h-full border border-gray-200 dark:border-gray-700">
                 <h3 className="font-medium text-gray-700 dark:text-gray-200 mb-2 text-sm">
                   {acc.username}
                 </h3>
@@ -242,7 +242,7 @@ const Repositories: React.FC = () => {
                     {(reposByAccount[acc.id] || []).map(repo => renderRepoItem(repo, true))}
                   </ul>
                 ) : (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">No repositories</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300">No repositories</p>
                 )}
               </div>
             ))}
