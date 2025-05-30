@@ -83,6 +83,7 @@ const Repositories: React.FC = () => {
     load();
   }, [viewMode, activeAccount, accounts]);
 
+
   if (viewMode === 'active' && !activeAccount) {
     return (
       <div className="container mx-auto max-w-4xl p-6 text-center">
@@ -235,6 +236,7 @@ const Repositories: React.FC = () => {
         ) : (
           <ul className="divide-y divide-gray-200 dark:divide-gray-700">
             {repos.map(renderRepoItem)}
+
           </ul>
         )}
       </div>
