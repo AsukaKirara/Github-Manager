@@ -1,6 +1,8 @@
 import JSZip from 'jszip';
 import { FileEntry } from '../types';
 
+declare const Buffer: any;
+
 export const processUploadedFiles = async (
   files: File[]
 ): Promise<FileEntry[]> => {
@@ -16,15 +18,21 @@ export const processUploadedFiles = async (
       const path = file.webkitRelativePath || file.name;
       // Read content for regular files
       let content: string | undefined = undefined;
-      // Ensure content is read even for empty files, as long as it's not a directory path
-      if (!file.webkitRelativePath?.endsWith('/')) { 
+      let isBinary = false;
+      if (!file.webkitRelativePath?.endsWith('/')) {
         try {
-          content = await file.text(); // file.text() returns "" for empty files
+          const buffer = await file.arrayBuffer();
+          try {
+            content = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+          } catch {
+            content = Buffer.from(buffer).toString('base64');
+            isBinary = true;
+          }
         } catch (e) {
           console.warn(`Could not read content for file: ${path}`, e);
         }
       }
-      const entry = createFileEntry(file, path, content);
+      const entry = createFileEntry(file, path, content, isBinary);
       
       // Add to result, handling nested paths
       addFileToHierarchy(result, entry);
@@ -52,13 +60,21 @@ const processZipFile = async (zipFile: File): Promise<FileEntry[]> => {
         };
         addFileToHierarchy(result, dirEntry);
       } else {
-        // Get file content as text
-        const content = await file.async('text');
+        let content: string | undefined;
+        let isBinary = false;
+        const buffer = await file.async('uint8array');
+        try {
+          content = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+        } catch {
+          content = Buffer.from(buffer).toString('base64');
+          isBinary = true;
+        }
         const fileEntry: FileEntry = {
           path,
           type: 'file',
           content,
-          size: content.length
+          size: buffer.length,
+          isBinary
         };
         addFileToHierarchy(result, fileEntry);
       }
@@ -70,7 +86,12 @@ const processZipFile = async (zipFile: File): Promise<FileEntry[]> => {
   return result;
 };
 
-const createFileEntry = (file: File, path: string, content?: string): FileEntry => {
+const createFileEntry = (
+  file: File,
+  path: string,
+  content?: string,
+  isBinary = false
+): FileEntry => {
   // Directories often have an empty type string or specific indicators like a trailing slash in webkitRelativePath.
   // Files usually have a non-empty type or a name containing a dot (unless it's a dotfile like .gitignore).
   const isDirectory = file.webkitRelativePath?.endsWith('/') || (!file.type && file.size === 0 && !path.includes('.'));
@@ -84,6 +105,7 @@ const createFileEntry = (file: File, path: string, content?: string): FileEntry 
       type: 'file',
       content: content,
       size: file.size,
+      isBinary
     };
   }
 
@@ -92,6 +114,7 @@ const createFileEntry = (file: File, path: string, content?: string): FileEntry 
     type: isDirectory ? 'directory' : 'file',
     size: isDirectory ? undefined : file.size,
     content: isDirectory ? undefined : content,
+    isBinary: isDirectory ? undefined : isBinary,
     children: isDirectory ? [] : undefined
   };
 };
@@ -180,4 +203,25 @@ const shouldIgnore = (path: string, ignorePatterns: string[]): boolean => {
     }
   }
   return false;
+};
+
+export const flattenFileTree = (entries: FileEntry[]): FileEntry[] => {
+  const result: FileEntry[] = [];
+
+  const walk = (entry: FileEntry, currentPath: string = '') => {
+    const fullPath = currentPath ? `${currentPath}/${entry.path}` : entry.path;
+    if (entry.type === 'file') {
+      result.push({ ...entry, path: fullPath });
+    } else if (entry.children) {
+      for (const child of entry.children) {
+        walk(child, fullPath);
+      }
+    }
+  };
+
+  for (const entry of entries) {
+    walk(entry);
+  }
+
+  return result;
 };
