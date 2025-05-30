@@ -19,7 +19,7 @@ if (!existsSync(outputFile)) {
   ], { stdio: 'inherit' });
 }
 
-const { processUploadedFiles, getFilesForCommit, flattenFileTree } = await import('../dist-test/utils/fileProcessor.js');
+const { processUploadedFiles, getFilesForCommit, flattenFileTree, deriveRepoNameFromUpload } = await import('../dist-test/utils/fileProcessor.js');
 
 test('processUploadedFiles handles single file', async () => {
   const file = new File(['hello'], 'hello.txt', { type: 'text/plain' });
@@ -72,4 +72,17 @@ test('flattenFileTree returns entries with full paths', () => {
   ];
   const flat = flattenFileTree(tree);
   assert.deepEqual(flat.map(f => f.path), ['src/index.js']);
+});
+
+test('deriveRepoNameFromUpload detects folder name', () => {
+  const f1 = new File(['x'], 'file.txt', { type: 'text/plain' });
+  Object.defineProperty(f1, 'webkitRelativePath', { value: 'myfolder/file.txt' });
+  const name = deriveRepoNameFromUpload([f1]);
+  assert.equal(name, 'myfolder');
+});
+
+test('deriveRepoNameFromUpload uses zip name', () => {
+  const zip = new File(['z'], 'archive.zip', { type: 'application/zip' });
+  const name = deriveRepoNameFromUpload([zip]);
+  assert.equal(name, 'archive');
 });

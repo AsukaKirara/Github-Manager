@@ -225,3 +225,24 @@ export const flattenFileTree = (entries: FileEntry[]): FileEntry[] => {
 
   return result;
 };
+
+export const deriveRepoNameFromUpload = (files: File[]): string | null => {
+  if (files.length === 0) return null;
+
+  // Single zip file upload
+  if (files.length === 1 && files[0].name.toLowerCase().endsWith('.zip')) {
+    return files[0].name.replace(/\.zip$/i, '');
+  }
+
+  // Look for a file with a relative path to infer folder name
+  const fileWithPath = files.find(f => (f as any).webkitRelativePath);
+  if (fileWithPath) {
+    const relPath = (fileWithPath as any).webkitRelativePath as string;
+    if (relPath.includes('/')) {
+      const folder = relPath.split('/')[0];
+      if (folder) return folder;
+    }
+  }
+
+  return null;
+};
