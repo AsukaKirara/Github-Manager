@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Accounts from './pages/Accounts';
 import NewRepository from './pages/NewRepository';
 import Repositories from './pages/Repositories';
+import StarredProjects from './pages/StarredProjects';
 import Settings from './pages/Settings';
 import Auth from './pages/Auth';
 import { Toaster } from './components/ui/Toaster';
@@ -24,6 +25,7 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/accounts" element={<Accounts />} />
                 <Route path="/repositories" element={<Repositories />} />
+                <Route path="/starred-projects" element={<StarredProjects />} />
                 <Route path="/new-repository" element={<NewRepository />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
