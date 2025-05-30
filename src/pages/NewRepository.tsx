@@ -320,7 +320,8 @@ const NewRepository: React.FC = () => {
               className="w-full sm:w-auto"
               variant="outline"
             >
-              <Upload className="mr-2 h-4 w-4" /> Create From Existing Files
+              <Upload className="mr-2 h-4 w-4" /> 
+              <span className="text-gray-800 dark:text-gray-200">Create From Existing Files</span>
             </Button>
           </div>
         </div>

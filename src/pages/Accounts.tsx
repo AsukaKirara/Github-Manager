@@ -201,7 +201,7 @@ const Accounts: React.FC = () => {
                         variant="outline"
                         onClick={() => handleSetActive(account.id, account.username)}
                       >
-                        Set Active
+                        <span className="text-gray-800 dark:text-gray-200">Set Active</span>
                       </Button>
                     )}
                     <Button 

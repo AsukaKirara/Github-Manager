@@ -169,7 +169,7 @@ const Repositories: React.FC = () => {
             disabled={!transferTargets[repo.full_name]}
             className={isCompact ? 'flex-1' : ''}
           >
-            Transfer
+            <span className="text-gray-800 dark:text-gray-200">Transfer</span>
           </Button>
           <Button
             size="sm"

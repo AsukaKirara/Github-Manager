@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
               disabled={!hasAccounts}
             >
               <Upload className="mr-2 h-5 w-5" />
-              Create From Existing Files
+              <span className="text-gray-800 dark:text-gray-200">Create From Existing Files</span>
             </Button>
           </div>
         </div>
@@ -166,7 +166,7 @@ const Dashboard: React.FC = () => {
                       className="text-xs"
                       onClick={() => navigate('/accounts')}
                     >
-                      Switch
+                      <span className="text-gray-700 dark:text-gray-200">Switch</span>
                     </Button>
                   )}
                 </li>
