@@ -83,6 +83,7 @@ const Repositories: React.FC = () => {
     load();
   }, [viewMode, activeAccount, accounts]);
 
+
   if (viewMode === 'active' && !activeAccount) {
     return (
       <div className="container mx-auto max-w-4xl p-6 text-center">
@@ -120,6 +121,63 @@ const Repositories: React.FC = () => {
     }
   };
 
+  const renderRepoItem = (repo: RepoWithAccount) => (
+    <li key={repo.id} className="py-4 flex justify-between items-center">
+      <div>
+        <a
+          href={repo.html_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          {repo.full_name}
+        </a>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {repo.account.username}
+        </p>
+        {repo.description && (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {repo.description}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center space-x-2">
+        <select
+          value={transferTargets[repo.full_name] || ''}
+          onChange={e =>
+            setTransferTargets({
+              ...transferTargets,
+              [repo.full_name]: e.target.value,
+            })
+          }
+          className="border rounded-md text-sm px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+        >
+          <option value="">Transfer to...</option>
+          {(orgsMap[repo.account.id] || []).map(org => (
+            <option key={org.id} value={org.login}>
+              {org.login}
+            </option>
+          ))}
+        </select>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleTransfer(repo)}
+          disabled={!transferTargets[repo.full_name]}
+        >
+          Transfer
+        </Button>
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => handleDelete(repo)}
+        >
+          Delete
+        </Button>
+      </div>
+    </li>
+  );
+
   return (
     <div className="container mx-auto max-w-4xl">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -152,64 +210,33 @@ const Repositories: React.FC = () => {
         </h2>
         {repos.length === 0 ? (
           <p className="text-gray-500 dark:text-gray-400">No repositories found.</p>
-        ) : (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {repos.map(repo => (
-              <li key={repo.id} className="py-4 flex justify-between items-center">
-                <div>
-                  <a
-                    href={repo.html_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {repo.full_name}
-                  </a>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {repo.account.username}
-                  </p>
-                  {repo.description && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {repo.description}
-                    </p>
+        ) : viewMode === 'all' ? (
+          <div
+            className="grid gap-4"
+            style={{ gridTemplateColumns: `repeat(${accounts.length}, minmax(0, 1fr))` }}
+          >
+            {accounts.map(acc => {
+              const list = repos.filter(r => r.account.id === acc.id);
+              return (
+                <div key={acc.id} className="border rounded-md p-4">
+                  <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-100">
+                    {acc.username}
+                  </h3>
+                  {list.length === 0 ? (
+                    <p className="text-gray-500 dark:text-gray-400">No repositories</p>
+                  ) : (
+                    <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {list.map(renderRepoItem)}
+                    </ul>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <select
-                    value={transferTargets[repo.full_name] || ''}
-                    onChange={e =>
-                      setTransferTargets({
-                        ...transferTargets,
-                        [repo.full_name]: e.target.value,
-                      })
-                    }
-                    className="border rounded-md text-sm px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  >
-                    <option value="">Transfer to...</option>
-                    {(orgsMap[repo.account.id] || []).map(org => (
-                      <option key={org.id} value={org.login}>
-                        {org.login}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleTransfer(repo)}
-                    disabled={!transferTargets[repo.full_name]}
-                  >
-                    Transfer
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(repo)}
-                  >
-                    Delete
-                  </Button>
-                </div>
-              </li>
-            ))}
+              );
+            })}
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+            {repos.map(renderRepoItem)}
+
           </ul>
         )}
       </div>

@@ -232,6 +232,7 @@ const NewRepository: React.FC = () => {
         // auto_init must be true so that blob creation doesn't fail on an
         // empty repository
         debugLog('Creating repository from files on GitHub');
+
         await createRepository(activeAccount, repositoryObject, true);
         const allFiles = flattenFileTree(files);
         debugLog('Creating initial commit with files', selectedFiles);
