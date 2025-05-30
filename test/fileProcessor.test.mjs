@@ -73,3 +73,14 @@ test('flattenFileTree returns entries with full paths', () => {
   const flat = flattenFileTree(tree);
   assert.deepEqual(flat.map(f => f.path), ['src/index.js']);
 });
+
+test('flattenFileTree removes trailing slashes', () => {
+  const tree = [
+    { path: 'dir/', type: 'directory', children: [
+      { path: 'a.txt', type: 'file', content: 'a' }
+    ] }
+  ];
+  const flat = flattenFileTree(tree);
+  assert.deepEqual(flat.map(f => f.path), ['dir/a.txt']);
+});
+

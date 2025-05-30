@@ -77,11 +77,13 @@ export const createCommit = async (
   message: string,
   files: FileEntry[]
 ) => {
+  const encodedRepo = encodeURIComponent(repoName);
+  const encodedBranch = encodeURIComponent(branch);
   // This is a simplified version - in a real app this would be more complex
   // as it would need to handle multiple files, directories, etc.
   
   // First, check if the repository exists
-  const repoResponse = await fetch(`https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}`, {
+  const repoResponse = await fetch(`https://api.github.com/repos/${account.username}/${encodedRepo}`, {
     headers: {
       Authorization: `token ${account.token}`,
       Accept: 'application/vnd.github.v3+json',
@@ -98,7 +100,9 @@ export const createCommit = async (
       .filter(file => file.type === 'file')
       .map(async file => {
         // Create a blob for the file
-        const blobResponse = await fetch(`https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/git/blobs`, {
+
+        const blobResponse = await fetch(`https://api.github.com/repos/${account.username}/${encodedRepo}/git/blobs`, {
+
           method: 'POST',
           headers: {
             Authorization: `token ${account.token}`,
@@ -129,7 +133,7 @@ export const createCommit = async (
 
   // Get the SHA of the current branch
   const refResponse = await fetch(
-    `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/git/refs/heads/${encodeURIComponent(branch)}`,
+    `https://api.github.com/repos/${account.username}/${encodedRepo}/git/refs/heads/${encodedBranch}`,
     {
       headers: {
         Authorization: `token ${account.token}`,
@@ -143,7 +147,8 @@ export const createCommit = async (
   if (!refResponse.ok) {
     // Get the default branch
     const defaultBranchResponse = await fetch(
-      `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}`,
+      `https://api.github.com/repos/${account.username}/${encodedRepo}`,
+
       {
         headers: {
           Authorization: `token ${account.token}`,
@@ -161,7 +166,7 @@ export const createCommit = async (
     
     // Get the SHA of the default branch
     const defaultBranchResponse2 = await fetch(
-      `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/git/refs/heads/${encodeURIComponent(defaultBranch)}`,
+      `https://api.github.com/repos/${account.username}/${encodedRepo}/git/refs/heads/${defaultBranch}`,
       {
         headers: {
           Authorization: `token ${account.token}`,
@@ -187,7 +192,7 @@ export const createCommit = async (
   if (baseSha) treeBody.base_tree = baseSha;
 
   const treeResponse = await fetch(
-    `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/git/trees`,
+    `https://api.github.com/repos/${account.username}/${encodedRepo}/git/trees`,
     {
       method: 'POST',
       headers: {
@@ -210,7 +215,8 @@ export const createCommit = async (
   if (baseSha) commitBody.parents = [baseSha];
 
   const commitResponse = await fetch(
-    `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/git/commits`,
+
+    `https://api.github.com/repos/${account.username}/${encodedRepo}/git/commits`,
     {
       method: 'POST',
       headers: {
@@ -230,8 +236,9 @@ export const createCommit = async (
 
   // Update or create the reference
   const updateRefUrl = refResponse.ok
-    ? `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/git/refs/heads/${encodeURIComponent(branch)}`
-    : `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/git/refs`;
+    ? `https://api.github.com/repos/${account.username}/${encodedRepo}/git/refs/heads/${encodedBranch}`
+    : `https://api.github.com/repos/${account.username}/${encodedRepo}/git/refs`;
+
   const updateRefMethod = refResponse.ok ? 'PATCH' : 'POST';
   const updateRefBody = refResponse.ok
     ? { sha: commitData.sha, force: false }
@@ -273,8 +280,9 @@ export const deleteRepository = async (
   account: GithubAccount,
   repoName: string
 ) => {
+  const encodedRepo = encodeURIComponent(repoName);
   const response = await fetch(
-    `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}`,
+    `https://api.github.com/repos/${account.username}/${encodedRepo}`,
     {
       method: 'DELETE',
       headers: {
@@ -297,8 +305,10 @@ export const transferRepository = async (
   repoName: string,
   newOwner: string
 ) => {
+  const encodedRepo = encodeURIComponent(repoName);
   const response = await fetch(
-    `https://api.github.com/repos/${account.username}/${encodeURIComponent(repoName)}/transfer`,
+    `https://api.github.com/repos/${account.username}/${encodedRepo}/transfer`,
+
     {
       method: 'POST',
       headers: {
