@@ -12,6 +12,7 @@ import { FileEntry, Repository } from '../types';
 import { processUploadedFiles, getFilesForCommit, flattenFileTree, deriveRepoNameFromUpload } from '../utils/fileProcessor';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
+import { debugLog } from '../utils/logger';
 import { useLocation } from 'react-router-dom';
 
 const NewRepository: React.FC = () => {
@@ -194,18 +195,24 @@ const NewRepository: React.FC = () => {
     setIsCreating(true);
     
     try {
+      debugLog('Starting repository creation', {
+        mode: creationMode,
+        name: repoName,
+      });
       const repositoryData = {
         name: repoName,
         description: repoDescription,
         visibility: repoVisibility,
-        // For empty repo, auto_init handles readme. For fromFiles, branchName is used.
-        auto_init: creationMode === 'empty' ? withReadme : false, 
+        // auto_init ensures the repository has an initial commit. When creating
+        // from files we enable it so subsequent API calls succeed.
+        auto_init: creationMode === 'empty' ? withReadme : true,
       };
 
       // Create repository on GitHub
       // For the 'empty' mode, we pass slightly different data to createRepository
       // and we don't create an initial commit with files here.
       if (creationMode === 'empty') {
+        debugLog('Creating empty repository on GitHub');
         await createRepository(activeAccount, {
           name: repoName,
           description: repoDescription,
@@ -222,8 +229,12 @@ const NewRepository: React.FC = () => {
           defaultBranch: branchName,
           files: files
         };
-        await createRepository(activeAccount, repositoryObject, false);
+        // auto_init must be true so that blob creation doesn't fail on an
+        // empty repository
+        debugLog('Creating repository from files on GitHub');
+        await createRepository(activeAccount, repositoryObject, true);
         const allFiles = flattenFileTree(files);
+        debugLog('Creating initial commit with files', selectedFiles);
         await createCommit(
           activeAccount,
           repoName,
@@ -232,6 +243,8 @@ const NewRepository: React.FC = () => {
           allFiles.filter(file => selectedFiles.includes(file.path))
         );
       }
+
+      debugLog('Repository creation flow finished');
       
       addToast({
         title: 'Repository created',
@@ -241,6 +254,7 @@ const NewRepository: React.FC = () => {
       
       resetForm();
     } catch (error) {
+      debugLog('Repository creation failed', error);
       addToast({
         title: 'Repository creation failed',
         description: error instanceof Error ? error.message : 'Unknown error occurred',
