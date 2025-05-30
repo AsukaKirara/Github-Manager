@@ -181,3 +181,25 @@ const shouldIgnore = (path: string, ignorePatterns: string[]): boolean => {
   }
   return false;
 };
+
+export const flattenFileTree = (entries: FileEntry[]): FileEntry[] => {
+  const result: FileEntry[] = [];
+
+  const walk = (entry: FileEntry, currentPath: string = '') => {
+    const cleanPath = entry.path.replace(/\/$/, '');
+    const fullPath = currentPath ? `${currentPath}/${cleanPath}` : cleanPath;
+    if (entry.type === 'file') {
+      result.push({ ...entry, path: fullPath });
+    } else if (entry.children) {
+      for (const child of entry.children) {
+        walk(child, fullPath);
+      }
+    }
+  };
+
+  for (const entry of entries) {
+    walk(entry);
+  }
+
+  return result;
+};

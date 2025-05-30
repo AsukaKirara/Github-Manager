@@ -9,7 +9,7 @@ import { useAppContext } from '../context/AppContext';
 import FileTree from '../components/FileTree';
 import { useToast } from '../components/ui/Toaster';
 import { FileEntry, Repository } from '../types';
-import { processUploadedFiles, getFilesForCommit } from '../utils/fileProcessor';
+import { processUploadedFiles, getFilesForCommit, flattenFileTree } from '../utils/fileProcessor';
 import { validateRepositoryName } from '../utils/validation';
 import { createRepository, createCommit } from '../utils/github';
 import { useLocation } from 'react-router-dom';
@@ -218,12 +218,13 @@ const NewRepository: React.FC = () => {
           files: files
         };
         await createRepository(activeAccount, repositoryObject, false);
+        const allFiles = flattenFileTree(files);
         await createCommit(
           activeAccount,
           repoName,
           branchName,
           commitMessage,
-          files.filter(file => selectedFiles.includes(file.path))
+          allFiles.filter(file => selectedFiles.includes(file.path))
         );
       }
       
