@@ -16,6 +16,8 @@ const AppLayout: React.FC = () => {
         return 'Manage Accounts';
       case '/new-repository':
         return 'Create Repository';
+      case '/starred-projects':
+        return 'Starred Projects';
       case '/settings':
         return 'Settings';
       default:

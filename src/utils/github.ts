@@ -352,3 +352,46 @@ export const transferRepository = async (
 
   return response.json();
 };
+
+export const fetchStarredRepositories = async (token: string) => {
+  const response = await fetch('https://api.github.com/user/starred', {
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitHub API error: ${response.statusText}`);
+  }
+
+  return response.json();
+};
+
+export const forkRepository = async (
+  account: GithubAccount,
+  owner: string,
+  repoName: string,
+  organization?: string
+) => {
+  const encodedRepo = encodeURIComponent(repoName);
+  const response = await fetch(
+    `https://api.github.com/repos/${owner}/${encodedRepo}/forks`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `token ${account.token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: organization ? JSON.stringify({ organization }) : undefined,
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || `GitHub API error: ${response.statusText}`);
+  }
+
+  return response.json();
+};
